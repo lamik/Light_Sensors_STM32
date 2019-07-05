@@ -80,7 +80,10 @@ BH1750_STATUS BH1750_SetMode(bh1750_mode Mode)
 //
 BH1750_STATUS BH1750_SetMtreg(uint8_t Mtreg)
 {
-	if(Mtreg <= 32 || Mtreg > 254) return BH1750_ERROR;
+	HAL_StatusTypeDef retCode;
+	if (Mtreg < 31 || Mtreg > 254) {
+		return BH1750_ERROR;
+	}
 
 	Bh1750_Mtreg = Mtreg;
 
@@ -89,8 +92,15 @@ BH1750_STATUS BH1750_SetMtreg(uint8_t Mtreg)
 	tmp[0] = (0x40 | (Mtreg >> 5));
 	tmp[1] = (0x60 | (Mtreg & 0x1F));
 
-	if(HAL_OK == HAL_I2C_Master_Transmit(bh1750_i2c, BH1750_ADDRESS, tmp, 2, 10))
+	retCode = HAL_I2C_Master_Transmit(bh1750_i2c, BH1750_ADDRESS, &tmp[0], 1, 10);
+	if (HAL_OK != retCode) {
+		return BH1750_ERROR;
+	}
+
+	retCode = HAL_I2C_Master_Transmit(bh1750_i2c, BH1750_ADDRESS, &tmp[1], 1, 10);
+	if (HAL_OK == retCode) {
 		return BH1750_OK;
+	}
 
 	return BH1750_ERROR;
 }
